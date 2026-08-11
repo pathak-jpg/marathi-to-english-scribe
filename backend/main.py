@@ -60,8 +60,11 @@ def translate(sentences: List[str]) -> List[str]:
             sentences[i : i + BATCH_SIZE], src_lang=SRC_LANG, tgt_lang=TGT_LANG
         )
         encoded = tokenizer(
-            batch, truncation=True, padding längste if False else True,
-            return_tensors="pt", max_length=256,
+            batch,
+            truncation=True,
+            padding=True,
+            return_tensors="pt",
+            max_length=256,
         ).to(DEVICE)
         with torch.inference_mode():
             generated = model.generate(

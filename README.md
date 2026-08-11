@@ -1,29 +1,69 @@
-# Welcome to your Lovable project
+# Marathi PDF → English Translator
 
-This project was built with [Lovable](https://lovable.dev).
+Prototype module 1 of a larger ISL translation project.
 
-## Build with Lovable
+**Flow:** Marathi PDF → extract text → translate Marathi → English → display both.
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+## How it runs here
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+The app ships with a working endpoint at `POST /api/translate-pdf` (TypeScript,
+runs in the app's serverless runtime):
 
-## Development
+1. Receives the uploaded PDF (multipart `file` field).
+2. Extracts the text of every page.
+3. Translates the Marathi text to English through Lovable AI.
+4. Returns:
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+```json
+{
+  "marathi_text": "महाराष्ट्र हे भारतातील एक राज्य आहे.",
+  "english_translation": "Maharashtra is a state in India."
+}
 ```
 
-## Built with
+Nothing is hardcoded — the response always comes from the uploaded document.
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+Scanned/image-only PDFs return a 422 error, since OCR is deliberately out of scope.
+
+## Using the Python FastAPI + IndicTrans2 backend
+
+The hosted runtime cannot execute Python or load the 1B-parameter IndicTrans2
+model, so the reference backend lives in `backend/` and the app can proxy to it.
+
+### 1. Run the backend
+
+```bash
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --port 8000
+```
+
+It uses:
+
+- [`pdfplumber`](https://github.com/jsvine/pdfplumber) for per-page text extraction
+- [AI4Bharat IndicTrans2](https://github.com/AI4Bharat/IndicTrans2), model
+  [`ai4bharat/indictrans2-indic-en-1B`](https://huggingface.co/ai4bharat/indictrans2-indic-en-1B)
+  (`mar_Deva` → `eng_Latn`)
+
+First start downloads ~4.5 GB of model weights. A GPU is strongly recommended;
+CPU works but is slow. `IndicTransToolkit` provides the required pre/post
+processor:
+
+```bash
+pip install git+https://github.com/VarunGumma/IndicTransToolkit.git
+```
+
+Verify with `curl http://localhost:8000/health`.
+
+### 2. Point the app at it
+
+Set the `INDICTRANS_API_URL` secret (e.g. `https://your-host.example.com`).
+When present, `/api/translate-pdf` forwards the uploaded PDF to
+`$INDICTRANS_API_URL/api/translate-pdf` and returns IndicTrans2's output
+unchanged. Unset it to fall back to the built-in translator.
+
+## Not implemented (by design)
+
+POS tagging, tokenization, dependency parsing, OCR, Whisper, speech recognition,
+ISL avatar.

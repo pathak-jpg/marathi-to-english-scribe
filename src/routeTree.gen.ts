@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiProcessPdfRouteImport } from './routes/api/process-pdf'
 import { Route as ApiTranslatePdfRouteImport } from './routes/api/translate-pdf'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProcessPdfRoute = ApiProcessPdfRouteImport.update({
+  id: '/api/process-pdf',
+  path: '/api/process-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTranslatePdfRoute = ApiTranslatePdfRouteImport.update({
@@ -25,27 +31,31 @@ const ApiTranslatePdfRoute = ApiTranslatePdfRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/process-pdf': typeof ApiProcessPdfRoute
   '/api/translate-pdf': typeof ApiTranslatePdfRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/process-pdf': typeof ApiProcessPdfRoute
   '/api/translate-pdf': typeof ApiTranslatePdfRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/process-pdf': typeof ApiProcessPdfRoute
   '/api/translate-pdf': typeof ApiTranslatePdfRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/translate-pdf'
+  fullPaths: '/' | '/api/process-pdf' | '/api/translate-pdf'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/translate-pdf'
-  id: '__root__' | '/' | '/api/translate-pdf'
+  to: '/' | '/api/process-pdf' | '/api/translate-pdf'
+  id: '__root__' | '/' | '/api/process-pdf' | '/api/translate-pdf'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiProcessPdfRoute: typeof ApiProcessPdfRoute
   ApiTranslatePdfRoute: typeof ApiTranslatePdfRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/process-pdf': {
+      id: '/api/process-pdf'
+      path: '/api/process-pdf'
+      fullPath: '/api/process-pdf'
+      preLoaderRoute: typeof ApiProcessPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/translate-pdf': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiProcessPdfRoute: ApiProcessPdfRoute,
   ApiTranslatePdfRoute: ApiTranslatePdfRoute,
 }
 export const routeTree = rootRouteImport

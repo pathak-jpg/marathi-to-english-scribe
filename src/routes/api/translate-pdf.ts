@@ -109,13 +109,16 @@ export const Route = createFileRoute("/api/translate-pdf")({
           });
         } catch (err) {
           const message = err instanceof Error ? err.message : "Unknown error";
-          if (/402/.test(message)) {
+          if (/402|payment required|insufficient|credit/i.test(message)) {
             return json(
-              { error: "AI credits exhausted. Please add credits to continue." },
+              {
+                error:
+                  "AI credits exhausted for this workspace. Add credits in Lovable (Settings → Workspace → Billing) to keep translating.",
+              },
               402,
             );
           }
-          if (/429/.test(message)) {
+          if (/429|rate limit|too many requests/i.test(message)) {
             return json(
               { error: "Rate limit reached. Please try again in a moment." },
               429,
